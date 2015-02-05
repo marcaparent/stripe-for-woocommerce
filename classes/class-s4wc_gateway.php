@@ -62,6 +62,9 @@ class S4WC_Gateway extends WC_Payment_Gateway {
         add_action( 'admin_notices', array( $this, 'admin_notices' ) );
         add_action( 'wp_enqueue_scripts', array( $this, 'load_scripts' ) );
         add_action( 'woocommerce_credit_card_form_start', array( $this, 'before_cc_form' ) );
+
+        // Adding custom opt save card to profile field
+        add_filter('woocommerce_credit_card_form_fields', array( $this, 'opt_in_to_save_card' ), 10, 2 );
     }
 
     /**
@@ -364,6 +367,27 @@ class S4WC_Gateway extends WC_Payment_Gateway {
             ) );
         }
     }
+
+    /**
+     * Add an opt-in field to ask for permission to save card to user's profile
+     *
+     * @access      public
+     * @param       array $default_fields
+     * @return      array
+     */
+    public function opt_in_to_save_card( $default_fields, $gateway_id ){
+        global $s4wc;
+
+        // Ensure that we're only outputting this for the s4wc gateway
+        if ( $gateway_id === $this->id ) {
+	    	$default_fields['opt-save-card-field'] = 
+		    	'<p class="form-row form-row-first checkbox">
+			    	<input id="' . esc_attr( $this->id ) . '-opt-save-card" class="input-checkbox wc-credit-card-form-opt-save-card" type="checkbox" />
+			    	<label for="' . esc_attr( $this->id ) . '-opt-save-card">' . __( 'Save card for future use', 'stripe-for-woocommerce' ) . '</label>
+			    </p>';
+		}
+	    return $default_fields;
+	}
 
     /**
      * Output payment fields, optional additional fields and woocommerce cc form
